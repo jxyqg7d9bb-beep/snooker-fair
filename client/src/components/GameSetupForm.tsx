@@ -16,6 +16,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { GameMode, GameSettings } from '@/lib/settlement';
+import { t } from '@/lib/i18n';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 
@@ -25,6 +27,7 @@ interface GameSetupFormProps {
 }
 
 export function GameSetupForm({ onSubmit, initialSettings }: GameSetupFormProps) {
+  const { language } = useLanguage();
   const [mode, setMode] = useState<GameMode>(initialSettings?.mode || 'pot');
   const [scoreMultiplier, setScoreMultiplier] = useState(initialSettings?.scoreMultiplier || 0);
   const [waterMultiplier, setWaterMultiplier] = useState(initialSettings?.waterMultiplier || 0);
@@ -62,17 +65,19 @@ export function GameSetupForm({ onSubmit, initialSettings }: GameSetupFormProps)
     const newErrors: string[] = [];
     const playerCountNum = parseInt(playerCount);
 
-    if (playerCountNum < 2 || playerCountNum > 10) {
-      newErrors.push('遊戲人數必須在 2-10 人之間');
+    const minPlayers = mode === 'pot' ? 3 : 2;
+    const maxPlayers = 6;
+    if (playerCountNum < minPlayers || playerCountNum > maxPlayers) {
+      newErrors.push(t('playerCountError', language, { min: minPlayers, max: maxPlayers }));
     }
     if (scoreMultiplier <= 0) {
-      newErrors.push('分數倍數必須大於 0');
+      newErrors.push(t('scoreMultiplierError', language));
     }
     if (waterMultiplier <= 0) {
-      newErrors.push('水倍數必須大於 0');
+      newErrors.push(t('penaltyMultiplierError', language));
     }
     if (pot <= 0) {
-      newErrors.push('波鐘必須大於 0');
+      newErrors.push(t('tableRateError', language));
     }
 
     if (newErrors.length > 0) {
@@ -93,27 +98,27 @@ export function GameSetupForm({ onSubmit, initialSettings }: GameSetupFormProps)
   return (
     <Card className="w-full animate-slide-up">
       <CardHeader>
-        <CardTitle className="text-2xl">遊戲設定</CardTitle>
-        <CardDescription>選擇遊戲模式並設定基本參數</CardDescription>
+        <CardTitle className="text-2xl">{t('gameSetupTitle', language)}</CardTitle>
+        <CardDescription>{t('gameSetupDescription', language)}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Game Mode Selection */}
           <div className="space-y-3">
-            <Label className="text-base font-semibold">遊戲模式</Label>
+            <Label className="text-base font-semibold">{t('gameMode', language)}</Label>
             <RadioGroup value={mode} onValueChange={(value) => handleModeChange(value as GameMode)}>
               <div className="flex items-center space-x-2 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors">
                 <RadioGroupItem value="pot" id="mode-pot" />
                 <Label htmlFor="mode-pot" className="flex-1 cursor-pointer">
-                  <div className="font-semibold text-slate-900">Pot 波 🙋🏼‍♂️🆚🙋🏼‍♂️🆚🙋🏼‍♂️</div>
-                  <div className="text-sm text-slate-600">分數高者為贏家</div>
+                  <div className="font-semibold text-slate-900">{language === 'zh' ? 'Pot 波 🙋🏼‍♂️🆚🙋🏼‍♂️🆚🙋🏼‍♂️' : t('potMode', language)}</div>
+                  <div className="text-sm text-slate-600">{t('potModeDesc', language)}</div>
                 </Label>
               </div>
               <div className="flex items-center space-x-2 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors">
                 <RadioGroupItem value="pearl" id="mode-pearl" />
                 <Label htmlFor="mode-pearl" className="flex-1 cursor-pointer">
-                  <div className="font-semibold text-slate-900">啤珠 🃏🎱</div>
-                  <div className="text-sm text-slate-600">分數低者為贏家</div>
+                  <div className="font-semibold text-slate-900">{language === 'zh' ? '啤珠 🃏🎱' : t('pearlMode', language)}</div>
+                  <div className="text-sm text-slate-600">{t('pearlModeDesc', language)}</div>
                 </Label>
               </div>
             </RadioGroup>
@@ -122,7 +127,7 @@ export function GameSetupForm({ onSubmit, initialSettings }: GameSetupFormProps)
           {/* Score Multiplier */}
           <div className="space-y-2">
             <Label htmlFor="scoreMultiplier" className="text-base font-semibold">
-              分數倍數
+              {t('scoreMultiplier', language)}
             </Label>
             <Input
               id="scoreMultiplier"
@@ -134,13 +139,13 @@ export function GameSetupForm({ onSubmit, initialSettings }: GameSetupFormProps)
               onChange={(e) => setScoreMultiplier(parseFloat(e.target.value) || 0)}
               className="w-full"
             />
-            <p className="text-xs text-slate-500">每 1 分相當於多少金額</p>
+            <p className="text-xs text-slate-500">{t('scoreMultiplierHint', language)}</p>
           </div>
 
-          {/* Water Multiplier */}
+          {/* Penalty Multiplier */}
           <div className="space-y-2">
             <Label htmlFor="waterMultiplier" className="text-base font-semibold">
-              水倍數
+              {t('penaltyMultiplier', language)}
             </Label>
             <Input
               id="waterMultiplier"
@@ -152,33 +157,33 @@ export function GameSetupForm({ onSubmit, initialSettings }: GameSetupFormProps)
               onChange={(e) => setWaterMultiplier(parseFloat(e.target.value) || 0)}
               className="w-full"
             />
-            <p className="text-xs text-slate-500">每 1 水相當於多少金額</p>
+            <p className="text-xs text-slate-500">{t('penaltyMultiplierHint', language)}</p>
           </div>
 
           {/* Player Count Dropdown */}
           <div className="space-y-2">
             <Label htmlFor="playerCount" className="text-base font-semibold">
-              遊戲人數
+              {t('playerCount', language)}
             </Label>
             <Select value={playerCount} onValueChange={setPlayerCount}>
               <SelectTrigger id="playerCount">
-                <SelectValue placeholder="選擇人數" />
+                <SelectValue placeholder={t('selectPlayerCount', language)} />
               </SelectTrigger>
               <SelectContent>
                 {Array.from({ length: playerRange.max - playerRange.min + 1 }, (_, i) => playerRange.min + i).map((num) => (
                   <SelectItem key={num} value={num.toString()}>
-                    {num} 人
+                    {num} {language === 'zh' ? '人' : 'player'}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs text-slate-500">最少 {playerRange.min} 人，最多 {playerRange.max} 人</p>
+            <p className="text-xs text-slate-500">{t('playerCountRange', language, { min: playerRange.min, max: playerRange.max })}</p>
           </div>
 
-          {/* Pot Amount - Moved to end */}
+          {/* Table Rate - Moved to end */}
           <div className="space-y-2">
             <Label htmlFor="pot" className="text-base font-semibold">
-              波鐘（總彩池）
+              {t('tableRate', language)}
             </Label>
             <Input
               id="pot"
@@ -190,7 +195,7 @@ export function GameSetupForm({ onSubmit, initialSettings }: GameSetupFormProps)
               onChange={(e) => setPot(parseFloat(e.target.value) || 0)}
               className="w-full"
             />
-            <p className="text-xs text-slate-500">遊戲結束後填寫的總金額</p>
+            <p className="text-xs text-slate-500">{t('tableRateHint', language)}</p>
           </div>
 
           {/* Error Messages */}
@@ -210,7 +215,7 @@ export function GameSetupForm({ onSubmit, initialSettings }: GameSetupFormProps)
             type="submit"
             className="w-full h-11 text-base font-semibold bg-slate-900 hover:bg-slate-800 transition-colors"
           >
-            下一步：輸入玩家資料
+            {t('nextButton', language)}
           </Button>
         </form>
       </CardContent>

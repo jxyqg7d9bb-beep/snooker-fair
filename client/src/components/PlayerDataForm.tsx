@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { GameSettings, Player } from '@/lib/settlement';
+import { t } from '@/lib/i18n';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { AlertCircle, ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 
@@ -19,6 +21,7 @@ interface PlayerDataFormProps {
 }
 
 export function PlayerDataForm({ settings, onSubmit, onBack, initialPlayers }: PlayerDataFormProps) {
+  const { language } = useLanguage();
   const [players, setPlayers] = useState<Player[]>(
     initialPlayers && initialPlayers.length === settings.playerCount
       ? initialPlayers
@@ -50,13 +53,13 @@ export function PlayerDataForm({ settings, onSubmit, onBack, initialPlayers }: P
     // Validate all players
     players.forEach((player, index) => {
       if (!player.name || player.name.trim() === '') {
-        newErrors.push(`玩家 ${index + 1} 的名稱不能為空`);
+        newErrors.push(`${t('playerName', language)} ${index + 1} ${language === 'zh' ? '不能為空' : 'cannot be empty'}`);
       }
       if (typeof player.score !== 'number' || isNaN(player.score)) {
-        newErrors.push(`玩家 ${player.name} 的分數必須是有效的數字`);
+        newErrors.push(`${t('player', language)} ${player.name} ${t('score', language)} ${language === 'zh' ? '必須是有效的數字' : 'must be a valid number'}`);
       }
       if (typeof player.water !== 'number' || isNaN(player.water)) {
-        newErrors.push(`玩家 ${player.name} 的水數必須是有效的數字`);
+        newErrors.push(`${t('player', language)} ${player.name} ${t('penalty', language)} ${language === 'zh' ? '必須是有效的數字' : 'must be a valid number'}`);
       }
     });
 
@@ -69,15 +72,14 @@ export function PlayerDataForm({ settings, onSubmit, onBack, initialPlayers }: P
     onSubmit(players);
   };
 
-  const modeLabel = settings.mode === 'pot' ? 'Pot 波（高分贏）' : '啤珠（低分贏）';
+  const modeLabel = settings.mode === 'pot' ? (language === 'zh' ? 'Pot 波（高分贏）' : 'Three-player competition (High Score Wins)') : (language === 'zh' ? '啤珠（低分贏）' : 'Poker Pool (Low Score Wins)');
 
   return (
     <Card className="w-full animate-slide-up">
       <CardHeader>
-        <CardTitle className="text-2xl">玩家資料</CardTitle>
+        <CardTitle className="text-2xl">{t('playerDataTitle', language)}</CardTitle>
         <CardDescription>
-          {modeLabel} · {settings.playerCount} 人 · 分數倍數 {settings.scoreMultiplier} · 水倍數{' '}
-          {settings.waterMultiplier}
+          {modeLabel} · {settings.playerCount} {language === 'zh' ? '人' : 'players'} · {t('scoreMultiplier', language)} {settings.scoreMultiplier} · {t('penaltyMultiplier', language)} {settings.waterMultiplier}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -93,12 +95,12 @@ export function PlayerDataForm({ settings, onSubmit, onBack, initialPlayers }: P
                   {/* Player Name */}
                   <div className="space-y-1">
                     <Label htmlFor={`name-${index}`} className="text-sm font-semibold">
-                      玩家名稱
+                      {t('playerName', language)}
                     </Label>
                     <Input
                       id={`name-${index}`}
                       type="text"
-                      placeholder="例如：小明"
+                      placeholder={t('playerNamePlaceholder', language)}
                       value={player.name}
                       onChange={(e) => handlePlayerChange(index, 'name', e.target.value)}
                       className="bg-white"
@@ -108,7 +110,7 @@ export function PlayerDataForm({ settings, onSubmit, onBack, initialPlayers }: P
                   {/* Score */}
                   <div className="space-y-1">
                     <Label htmlFor={`score-${index}`} className="text-sm font-semibold">
-                      分數
+                      {t('score', language)}
                     </Label>
                     <Input
                       id={`score-${index}`}
@@ -120,10 +122,10 @@ export function PlayerDataForm({ settings, onSubmit, onBack, initialPlayers }: P
                     />
                   </div>
 
-                  {/* Water */}
+                  {/* Penalty */}
                   <div className="space-y-1">
                     <Label htmlFor={`water-${index}`} className="text-sm font-semibold">
-                      水數
+                      {t('penalty', language)}
                     </Label>
                     <Input
                       id={`water-${index}`}
@@ -160,13 +162,13 @@ export function PlayerDataForm({ settings, onSubmit, onBack, initialPlayers }: P
               className="flex-1 h-11"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              返回
+              {t('backButton', language)}
             </Button>
             <Button
               type="submit"
               className="flex-1 h-11 text-base font-semibold bg-slate-900 hover:bg-slate-800"
             >
-              計算結果
+              {t('calculateButton', language)}
             </Button>
           </div>
         </form>

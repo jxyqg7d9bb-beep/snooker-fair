@@ -8,6 +8,9 @@ import { GameSetupForm } from '@/components/GameSetupForm';
 import { PlayerDataForm } from '@/components/PlayerDataForm';
 import { SettlementResults } from '@/components/SettlementResults';
 import { calculateSettlement, GameSettings, Player, SettlementResult } from '@/lib/settlement';
+import { t } from '@/lib/i18n';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 
 type Step = 'setup' | 'input' | 'results';
@@ -40,6 +43,8 @@ export default function Home() {
     }
   };
 
+  const { language, setLanguage } = useLanguage();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
@@ -47,13 +52,33 @@ export default function Home() {
         <div className="container py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">🎱 Snooker Fair</h1>
-              <p className="text-sm text-slate-600">遊戲計數結算工具</p>
+              <h1 className="text-2xl font-bold text-slate-900">{t('appTitle', language)}</h1>
+              <p className="text-sm text-slate-600">{t('appSubtitle', language)}</p>
             </div>
-            <div className="text-xs text-slate-500">
-              {step === 'setup' && '第 1 步：遊戲設定'}
-              {step === 'input' && '第 2 步：玩家資料'}
-              {step === 'results' && '第 3 步：結算結果'}
+            <div className="flex items-center gap-4">
+              <div className="text-xs text-slate-500">
+                {step === 'setup' && t('step1', language)}
+                {step === 'input' && t('step2', language)}
+                {step === 'results' && t('step3', language)}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant={language === 'zh' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setLanguage('zh')}
+                  className="h-8 px-3 text-xs"
+                >
+                  中文
+                </Button>
+                <Button
+                  variant={language === 'en' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setLanguage('en')}
+                  className="h-8 px-3 text-xs"
+                >
+                  English
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -83,7 +108,7 @@ export default function Home() {
       <footer className="border-t border-slate-200 bg-white/50 backdrop-blur-sm mt-12">
         <div className="container py-6">
           <div className="text-center text-sm text-slate-600">
-            <p>Snooker Fair © 2026 · 專為棋牌遊戲結算設計</p>
+            <p>{t('footerText', language)}</p>
           </div>
         </div>
       </footer>

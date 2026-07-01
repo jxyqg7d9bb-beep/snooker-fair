@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { GameSettings, SettlementResult } from '@/lib/settlement';
+import { t } from '@/lib/i18n';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { ArrowLeft, Copy } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -18,9 +20,10 @@ interface SettlementResultsProps {
 }
 
 export function SettlementResults({ settings, result, onBack }: SettlementResultsProps) {
+  const { language } = useLanguage();
   const [copied, setCopied] = useState(false);
 
-  const modeLabel = settings.mode === 'pot' ? 'Pot 波' : '啤珠';
+  const modeLabel = settings.mode === 'pot' ? (language === 'zh' ? 'Pot 波' : 'Three-player competition') : (language === 'zh' ? '啤珠' : 'Poker Pool');
 
   const formatAmount = (amount: number) => {
     const absAmount = Math.abs(amount).toFixed(2);
@@ -131,7 +134,7 @@ export function SettlementResults({ settings, result, onBack }: SettlementResult
       {/* Settlement Summary */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">結算摘要</CardTitle>
+          <CardTitle className="text-lg">{t('settlementSummary', language)}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
@@ -141,15 +144,15 @@ export function SettlementResults({ settings, result, onBack }: SettlementResult
                 <div className="text-right">
                   {player.finalAmount > 0 ? (
                     <div>
-                      <span className="amount-positive">收 ${player.finalAmount.toFixed(2)}</span>
+                      <span className="amount-positive">{t('receive', language)} ${player.finalAmount.toFixed(2)}</span>
                     </div>
                   ) : player.finalAmount < 0 ? (
                     <div>
-                      <span className="amount-negative">付 ${Math.abs(player.finalAmount).toFixed(2)}</span>
+                      <span className="amount-negative">{t('pay', language)} ${Math.abs(player.finalAmount).toFixed(2)}</span>
                     </div>
                   ) : (
                     <div>
-                      <span className="amount-neutral">平手</span>
+                      <span className="amount-neutral">{t('draw', language)}</span>
                     </div>
                   )}
                 </div>
@@ -168,7 +171,7 @@ export function SettlementResults({ settings, result, onBack }: SettlementResult
           className="flex-1 h-11"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          重新計算
+          {t('recalculateButton', language)}
         </Button>
         <Button
           type="button"
@@ -176,7 +179,7 @@ export function SettlementResults({ settings, result, onBack }: SettlementResult
           className="flex-1 h-11 text-base font-semibold bg-emerald-600 hover:bg-emerald-700"
         >
           <Copy className="w-4 h-4 mr-2" />
-          {copied ? '已複製' : '複製結果'}
+          {copied ? t('copiedButton', language) : t('copyResultsButton', language)}
         </Button>
       </div>
     </div>
