@@ -93,19 +93,19 @@ export function SettlementResults({ settings, result, onBack }: SettlementResult
       {/* Results Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">各玩家結算明細</CardTitle>
+          <CardTitle className="text-lg">{t('playerSettlementDetails', language)}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-left">玩家</TableHead>
-                  <TableHead className="text-right">分數</TableHead>
-                  <TableHead className="text-right">水數</TableHead>
-                  <TableHead className="text-right">水錢負擔</TableHead>
-                  <TableHead className="text-right">分數損益</TableHead>
-                  <TableHead className="text-right font-bold">最終結算</TableHead>
+                  <TableHead className="text-left">{t('player', language)}</TableHead>
+                  <TableHead className="text-right">{t('score', language)}</TableHead>
+                  <TableHead className="text-right">{t('penalty', language)}</TableHead>
+                  <TableHead className="text-right">{language === 'zh' ? '水錢負擄' : 'Penalty Cost'}</TableHead>
+                  <TableHead className="text-right">{language === 'zh' ? '分數損益' : 'Score Gain/Loss'}</TableHead>
+                  <TableHead className="text-right font-bold">{language === 'zh' ? '最終結算' : 'Final Settlement'}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

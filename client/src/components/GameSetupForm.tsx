@@ -110,14 +110,14 @@ export function GameSetupForm({ onSubmit, initialSettings }: GameSetupFormProps)
               <div className="flex items-center space-x-2 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors">
                 <RadioGroupItem value="pot" id="mode-pot" />
                 <Label htmlFor="mode-pot" className="flex-1 cursor-pointer">
-                  <div className="font-semibold text-slate-900">{language === 'zh' ? 'Pot 波 🙋🏼‍♂️🆚🙋🏼‍♂️🆚🙋🏼‍♂️' : t('potMode', language)}</div>
+                  <div className="font-semibold text-slate-900">{language === 'zh' ? 'Pot 波 🙋🏼‍♂️🆚🙋🏼‍♂️🆚🙋🏼‍♂️' : 'Three-player competition 🙋🏼‍♂️🆚🙋🏼‍♂️🆚🙋🏼‍♂️'}</div>
                   <div className="text-sm text-slate-600">{t('potModeDesc', language)}</div>
                 </Label>
               </div>
               <div className="flex items-center space-x-2 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors">
                 <RadioGroupItem value="pearl" id="mode-pearl" />
                 <Label htmlFor="mode-pearl" className="flex-1 cursor-pointer">
-                  <div className="font-semibold text-slate-900">{language === 'zh' ? '啤珠 🃏🎱' : t('pearlMode', language)}</div>
+                  <div className="font-semibold text-slate-900">{language === 'zh' ? '啤珠 🃏🎱' : 'Poker Pool 🃏🎱'}</div>
                   <div className="text-sm text-slate-600">{t('pearlModeDesc', language)}</div>
                 </Label>
               </div>
@@ -183,7 +183,7 @@ export function GameSetupForm({ onSubmit, initialSettings }: GameSetupFormProps)
           {/* Table Rate - Moved to end */}
           <div className="space-y-2">
             <Label htmlFor="pot" className="text-base font-semibold">
-              {t('tableRate', language)}
+              {language === 'zh' ? '波鐘' : 'Table Rate'}
             </Label>
             <Input
               id="pot"

@@ -49,24 +49,26 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
       <header className="border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">{t('appTitle', language)}</h1>
-              <p className="text-sm text-slate-600">{t('appSubtitle', language)}</p>
+        <div className="container py-3">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <h1 className="text-xl font-bold text-slate-900 whitespace-nowrap">{t('appTitle', language)}</h1>
+                <p className="text-xs text-slate-500 whitespace-nowrap">{t('appSubtitle', language)}</p>
+              </div>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="text-xs text-slate-500">
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <div className="text-xs text-slate-500 text-right hidden sm:block">
                 {step === 'setup' && t('step1', language)}
                 {step === 'input' && t('step2', language)}
                 {step === 'results' && t('step3', language)}
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-1.5">
                 <Button
                   variant={language === 'zh' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setLanguage('zh')}
-                  className="h-8 px-3 text-xs"
+                  className="h-7 px-2.5 text-xs"
                 >
                   中文
                 </Button>
@@ -74,9 +76,9 @@ export default function Home() {
                   variant={language === 'en' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setLanguage('en')}
-                  className="h-8 px-3 text-xs"
+                  className="h-7 px-2.5 text-xs"
                 >
-                  English
+                  EN
                 </Button>
               </div>
             </div>
@@ -85,7 +87,7 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <main className="container py-8">
+      <main className="container py-6">
         <div className="max-w-2xl mx-auto">
           {step === 'setup' && <GameSetupForm onSubmit={handleSetupSubmit} initialSettings={settings} />}
 
