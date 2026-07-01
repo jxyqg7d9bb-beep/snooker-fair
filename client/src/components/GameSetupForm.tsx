@@ -1,6 +1,6 @@
 /**
  * GameSetupForm Component
- * Handles initial game configuration: mode, player count, multipliers, and pot
+ * Handles initial game configuration: mode, multipliers, player count, and pot
  */
 
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { GameMode, GameSettings } from '@/lib/settlement';
 import { AlertCircle } from 'lucide-react';
 import { useState } from 'react';
@@ -18,17 +25,18 @@ interface GameSetupFormProps {
 
 export function GameSetupForm({ onSubmit }: GameSetupFormProps) {
   const [mode, setMode] = useState<GameMode>('pot');
-  const [playerCount, setPlayerCount] = useState(3);
-  const [scoreMultiplier, setScoreMultiplier] = useState(5);
-  const [waterMultiplier, setWaterMultiplier] = useState(10);
-  const [pot, setPot] = useState(190);
+  const [scoreMultiplier, setScoreMultiplier] = useState(0);
+  const [waterMultiplier, setWaterMultiplier] = useState(0);
+  const [playerCount, setPlayerCount] = useState('3');
+  const [pot, setPot] = useState(0);
   const [errors, setErrors] = useState<string[]>([]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: string[] = [];
+    const playerCountNum = parseInt(playerCount);
 
-    if (playerCount < 2 || playerCount > 10) {
+    if (playerCountNum < 2 || playerCountNum > 10) {
       newErrors.push('遊戲人數必須在 2-10 人之間');
     }
     if (scoreMultiplier <= 0) {
@@ -49,7 +57,7 @@ export function GameSetupForm({ onSubmit }: GameSetupFormProps) {
     setErrors([]);
     onSubmit({
       mode,
-      playerCount,
+      playerCount: playerCountNum,
       scoreMultiplier,
       waterMultiplier,
       pot,
@@ -85,26 +93,6 @@ export function GameSetupForm({ onSubmit }: GameSetupFormProps) {
             </RadioGroup>
           </div>
 
-          {/* Player Count */}
-          <div className="space-y-2">
-            <Label htmlFor="playerCount" className="text-base font-semibold">
-              遊戲人數
-            </Label>
-            <div className="flex items-center gap-2">
-              <Input
-                id="playerCount"
-                type="number"
-                min="2"
-                max="10"
-                value={playerCount}
-                onChange={(e) => setPlayerCount(parseInt(e.target.value) || 2)}
-                className="w-24"
-              />
-              <span className="text-slate-600">人</span>
-            </div>
-            <p className="text-xs text-slate-500">最少 2 人，最多 10 人</p>
-          </div>
-
           {/* Score Multiplier */}
           <div className="space-y-2">
             <Label htmlFor="scoreMultiplier" className="text-base font-semibold">
@@ -115,8 +103,9 @@ export function GameSetupForm({ onSubmit }: GameSetupFormProps) {
               type="number"
               min="0.1"
               step="0.1"
-              value={scoreMultiplier}
-              onChange={(e) => setScoreMultiplier(parseFloat(e.target.value) || 1)}
+              placeholder="0"
+              value={scoreMultiplier || ''}
+              onChange={(e) => setScoreMultiplier(parseFloat(e.target.value) || 0)}
               className="w-full"
             />
             <p className="text-xs text-slate-500">每 1 分相當於多少金額</p>
@@ -132,14 +121,35 @@ export function GameSetupForm({ onSubmit }: GameSetupFormProps) {
               type="number"
               min="0.1"
               step="0.1"
-              value={waterMultiplier}
-              onChange={(e) => setWaterMultiplier(parseFloat(e.target.value) || 1)}
+              placeholder="0"
+              value={waterMultiplier || ''}
+              onChange={(e) => setWaterMultiplier(parseFloat(e.target.value) || 0)}
               className="w-full"
             />
             <p className="text-xs text-slate-500">每 1 水相當於多少金額</p>
           </div>
 
-          {/* Pot Amount */}
+          {/* Player Count Dropdown */}
+          <div className="space-y-2">
+            <Label htmlFor="playerCount" className="text-base font-semibold">
+              遊戲人數
+            </Label>
+            <Select value={playerCount} onValueChange={setPlayerCount}>
+              <SelectTrigger id="playerCount">
+                <SelectValue placeholder="選擇人數" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 9 }, (_, i) => i + 2).map((num) => (
+                  <SelectItem key={num} value={num.toString()}>
+                    {num} 人
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-slate-500">最少 2 人，最多 10 人</p>
+          </div>
+
+          {/* Pot Amount - Moved to end */}
           <div className="space-y-2">
             <Label htmlFor="pot" className="text-base font-semibold">
               波鐘（總彩池）
@@ -149,11 +159,12 @@ export function GameSetupForm({ onSubmit }: GameSetupFormProps) {
               type="number"
               min="0"
               step="1"
-              value={pot}
+              placeholder="0"
+              value={pot || ''}
               onChange={(e) => setPot(parseFloat(e.target.value) || 0)}
               className="w-full"
             />
-            <p className="text-xs text-slate-500">遊戲開始時的總金額</p>
+            <p className="text-xs text-slate-500">遊戲結束後填寫的總金額</p>
           </div>
 
           {/* Error Messages */}
