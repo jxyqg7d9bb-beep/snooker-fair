@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd client && npx vite build --outDir ../dist/public",
+  "buildCommand": "pnpm run build",
   "outputDirectory": "dist/public",
   "installCommand": "pnpm install",
   "rewrites": [
