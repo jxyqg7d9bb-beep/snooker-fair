@@ -1,6 +1,7 @@
 /**
  * Home Page - Main Settlement Calculator
  * Orchestrates the three-step flow: Setup → Input → Results
+ * Preserves form data when navigating back
  */
 
 import { GameSetupForm } from '@/components/GameSetupForm';
@@ -61,10 +62,15 @@ export default function Home() {
       {/* Main Content */}
       <main className="container py-8">
         <div className="max-w-2xl mx-auto">
-          {step === 'setup' && <GameSetupForm onSubmit={handleSetupSubmit} />}
+          {step === 'setup' && <GameSetupForm onSubmit={handleSetupSubmit} initialSettings={settings} />}
 
           {step === 'input' && settings && (
-            <PlayerDataForm settings={settings} onSubmit={handlePlayerSubmit} onBack={handleBack} />
+            <PlayerDataForm 
+              settings={settings} 
+              onSubmit={handlePlayerSubmit} 
+              onBack={handleBack}
+              initialPlayers={players}
+            />
           )}
 
           {step === 'results' && settings && result && (

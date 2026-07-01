@@ -15,16 +15,19 @@ interface PlayerDataFormProps {
   settings: GameSettings;
   onSubmit: (players: Player[]) => void;
   onBack: () => void;
+  initialPlayers?: Player[] | null;
 }
 
-export function PlayerDataForm({ settings, onSubmit, onBack }: PlayerDataFormProps) {
+export function PlayerDataForm({ settings, onSubmit, onBack, initialPlayers }: PlayerDataFormProps) {
   const [players, setPlayers] = useState<Player[]>(
-    Array.from({ length: settings.playerCount }, (_, i) => ({
-      id: `player-${i}`,
-      name: String.fromCharCode(65 + i), // A, B, C, ...
-      score: 0,
-      water: 0,
-    }))
+    initialPlayers && initialPlayers.length === settings.playerCount
+      ? initialPlayers
+      : Array.from({ length: settings.playerCount }, (_, i) => ({
+          id: `player-${i}`,
+          name: String.fromCharCode(65 + i), // A, B, C, ...
+          score: 0,
+          water: 0,
+        }))
   );
   const [errors, setErrors] = useState<string[]>([]);
 

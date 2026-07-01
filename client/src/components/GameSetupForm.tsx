@@ -21,14 +21,15 @@ import { useState } from 'react';
 
 interface GameSetupFormProps {
   onSubmit: (settings: GameSettings) => void;
+  initialSettings?: GameSettings | null;
 }
 
-export function GameSetupForm({ onSubmit }: GameSetupFormProps) {
-  const [mode, setMode] = useState<GameMode>('pot');
-  const [scoreMultiplier, setScoreMultiplier] = useState(0);
-  const [waterMultiplier, setWaterMultiplier] = useState(0);
-  const [playerCount, setPlayerCount] = useState('3');
-  const [pot, setPot] = useState(0);
+export function GameSetupForm({ onSubmit, initialSettings }: GameSetupFormProps) {
+  const [mode, setMode] = useState<GameMode>(initialSettings?.mode || 'pot');
+  const [scoreMultiplier, setScoreMultiplier] = useState(initialSettings?.scoreMultiplier || 0);
+  const [waterMultiplier, setWaterMultiplier] = useState(initialSettings?.waterMultiplier || 0);
+  const [playerCount, setPlayerCount] = useState(initialSettings?.playerCount.toString() || '3');
+  const [pot, setPot] = useState(initialSettings?.pot || 0);
   const [errors, setErrors] = useState<string[]>([]);
 
   const handleSubmit = (e: React.FormEvent) => {
