@@ -61,9 +61,9 @@ export function SettlementResults({ settings, result, onBack }: SettlementResult
       {/* Header Card */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">結算結果</CardTitle>
+          <CardTitle className="text-2xl">{t('settlementResultsTitle', language)}</CardTitle>
           <CardDescription>
-            {modeLabel} · {settings.playerCount} 人 · 波鐘 ${settings.pot.toFixed(2)}
+            {modeLabel} · {settings.playerCount} {language === 'zh' ? '人' : 'players'} · {language === 'zh' ? '波鐘' : 'Table Rate'} ${settings.pot.toFixed(2)}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -72,19 +72,19 @@ export function SettlementResults({ settings, result, onBack }: SettlementResult
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-6">
-            <div className="text-sm text-slate-600 mb-1">總水數</div>
+            <div className="text-sm text-slate-600 mb-1">{t('totalPenalty', language)}</div>
             <div className="text-2xl font-bold text-slate-900">{result.totalWater}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <div className="text-sm text-slate-600 mb-1">剩餘波鐘</div>
+            <div className="text-sm text-slate-600 mb-1">{t('remainingPool', language)}</div>
             <div className="text-2xl font-bold text-slate-900">${result.remainingPot.toFixed(2)}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <div className="text-sm text-slate-600 mb-1">每人平分</div>
+            <div className="text-sm text-slate-600 mb-1">{t('perPlayerShare', language)}</div>
             <div className="text-2xl font-bold text-slate-900">${result.perPlayerShare.toFixed(2)}</div>
           </CardContent>
         </Card>

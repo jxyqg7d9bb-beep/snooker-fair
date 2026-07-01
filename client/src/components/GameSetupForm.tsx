@@ -109,8 +109,11 @@ export function GameSetupForm({ onSubmit, initialSettings }: GameSetupFormProps)
             <RadioGroup value={mode} onValueChange={(value) => handleModeChange(value as GameMode)}>
               <div className="flex items-center space-x-2 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors">
                 <RadioGroupItem value="pot" id="mode-pot" />
-                <Label htmlFor="mode-pot" className="flex-1 cursor-pointer">
-                  <div className="font-semibold text-slate-900">{language === 'zh' ? 'Pot 波 🙋🏼‍♂️🆚🙋🏼‍♂️🆚🙋🏼‍♂️' : 'Three-player competition 🙋🏼‍♂️🆚🙋🏼‍♂️🆚🙋🏼‍♂️'}</div>
+                <Label htmlFor="mode-pot" className="flex-1 cursor-pointer min-w-0">
+                  <div className="font-semibold text-slate-900 flex items-center gap-1 flex-wrap">
+                    <span className="whitespace-nowrap">{language === 'zh' ? 'Pot 波' : 'Three-player competition'}</span>
+                    <span className="whitespace-nowrap">🙋🏼‍♂️🆚🙋🏼‍♂️🆚🙋🏼‍♂️</span>
+                  </div>
                   <div className="text-sm text-slate-600">{t('potModeDesc', language)}</div>
                 </Label>
               </div>
