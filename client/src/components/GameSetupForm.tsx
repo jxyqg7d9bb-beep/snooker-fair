@@ -28,7 +28,32 @@ export function GameSetupForm({ onSubmit, initialSettings }: GameSetupFormProps)
   const [mode, setMode] = useState<GameMode>(initialSettings?.mode || 'pot');
   const [scoreMultiplier, setScoreMultiplier] = useState(initialSettings?.scoreMultiplier || 0);
   const [waterMultiplier, setWaterMultiplier] = useState(initialSettings?.waterMultiplier || 0);
-  const [playerCount, setPlayerCount] = useState(initialSettings?.playerCount.toString() || '3');
+  const [playerCount, setPlayerCount] = useState(
+    initialSettings?.playerCount.toString() || (initialSettings?.mode === 'pearl' ? '2' : '3')
+  );
+
+  // Determine min and max player count based on game mode
+  const getPlayerCountRange = () => {
+    if (mode === 'pot') {
+      return { min: 3, max: 6 };
+    } else {
+      return { min: 2, max: 6 };
+    }
+  };
+
+  const playerRange = getPlayerCountRange();
+
+  // Reset player count if it's out of range when mode changes
+  const handleModeChange = (newMode: GameMode) => {
+    setMode(newMode);
+    const newRange = newMode === 'pot' ? { min: 3, max: 6 } : { min: 2, max: 6 };
+    const currentCount = parseInt(playerCount);
+    if (currentCount < newRange.min) {
+      setPlayerCount(newRange.min.toString());
+    } else if (currentCount > newRange.max) {
+      setPlayerCount(newRange.max.toString());
+    }
+  };
   const [pot, setPot] = useState(initialSettings?.pot || 0);
   const [errors, setErrors] = useState<string[]>([]);
 
@@ -76,18 +101,18 @@ export function GameSetupForm({ onSubmit, initialSettings }: GameSetupFormProps)
           {/* Game Mode Selection */}
           <div className="space-y-3">
             <Label className="text-base font-semibold">遊戲模式</Label>
-            <RadioGroup value={mode} onValueChange={(value) => setMode(value as GameMode)}>
+            <RadioGroup value={mode} onValueChange={(value) => handleModeChange(value as GameMode)}>
               <div className="flex items-center space-x-2 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors">
                 <RadioGroupItem value="pot" id="mode-pot" />
                 <Label htmlFor="mode-pot" className="flex-1 cursor-pointer">
-                  <div className="font-semibold text-slate-900">Pot 波</div>
+                  <div className="font-semibold text-slate-900">Pot 波 🙋🏼‍♂️🆚🙋🏼‍♂️🆚🙋🏼‍♂️</div>
                   <div className="text-sm text-slate-600">分數高者為贏家</div>
                 </Label>
               </div>
               <div className="flex items-center space-x-2 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors">
                 <RadioGroupItem value="pearl" id="mode-pearl" />
                 <Label htmlFor="mode-pearl" className="flex-1 cursor-pointer">
-                  <div className="font-semibold text-slate-900">啤珠</div>
+                  <div className="font-semibold text-slate-900">啤珠 🃏🎱</div>
                   <div className="text-sm text-slate-600">分數低者為贏家</div>
                 </Label>
               </div>
@@ -140,14 +165,14 @@ export function GameSetupForm({ onSubmit, initialSettings }: GameSetupFormProps)
                 <SelectValue placeholder="選擇人數" />
               </SelectTrigger>
               <SelectContent>
-                {Array.from({ length: 9 }, (_, i) => i + 2).map((num) => (
+                {Array.from({ length: playerRange.max - playerRange.min + 1 }, (_, i) => playerRange.min + i).map((num) => (
                   <SelectItem key={num} value={num.toString()}>
                     {num} 人
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs text-slate-500">最少 2 人，最多 10 人</p>
+            <p className="text-xs text-slate-500">最少 {playerRange.min} 人，最多 {playerRange.max} 人</p>
           </div>
 
           {/* Pot Amount - Moved to end */}
