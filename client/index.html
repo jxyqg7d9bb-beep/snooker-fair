@@ -27,10 +27,9 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script
-      defer
-      src="%VITE_ANALYTICS_ENDPOINT%/umami"
-      data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"></script>
+    <!-- Analytics script removed for Cloudflare Pages compatibility -->
+    <!-- Environment variables are not available at build time on Cloudflare -->
+    <!-- To enable analytics, add the script back when deploying to Vercel -->
   </body>
 
 </html>
