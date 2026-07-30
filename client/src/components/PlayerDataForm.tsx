@@ -116,16 +116,30 @@ export function PlayerDataForm({ settings, onSubmit, onBack, initialPlayers }: P
                   className="h-9 bg-white text-sm text-center px-2"
                 />
 
-                {/* Score - use text keyboard so minus sign is available on all phones */}
-                <Input
-                  id={`score-${index}`}
-                  type="text"
-                  inputMode="text"
-                  placeholder="0"
-                  value={player.score === 0 ? '' : player.score}
-                  onChange={(e) => handlePlayerChange(index, 'score', e.target.value)}
-                  className="h-9 bg-white text-sm text-center px-2"
-                />
+                {/* Score - with +/− toggle button for mobile */}
+                <div className="flex gap-1 items-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newPlayers = [...players];
+                      newPlayers[index].score = -newPlayers[index].score;
+                      setPlayers(newPlayers);
+                    }}
+                    className="h-9 w-8 flex-shrink-0 rounded-md border border-slate-300 bg-white text-slate-600 text-base font-bold hover:bg-slate-100 active:scale-95 transition-transform flex items-center justify-center"
+                    title="切換正負"
+                  >
+                    ±
+                  </button>
+                  <Input
+                    id={`score-${index}`}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="0"
+                    value={player.score === 0 ? '' : String(player.score)}
+                    onChange={(e) => handlePlayerChange(index, 'score', e.target.value)}
+                    className="h-9 bg-white text-sm text-center px-1 min-w-0"
+                  />
+                </div>
 
                 {/* Penalty / Water */}
                 <Input
