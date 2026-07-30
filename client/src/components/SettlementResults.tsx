@@ -51,27 +51,30 @@ export function SettlementResults({ settings, result, onBack }: SettlementResult
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Build pairwise comparison pairs for calculation steps
+  // Build pairwise comparison pairs for Pearl mode calculation steps
   const pairs: Array<{ nameA: string; nameB: string; scoreA: number; scoreB: number; diff: number; winner: string; loser: string; amount: number }> = [];
-  const players = result.players;
-  for (let i = 0; i < players.length; i++) {
-    for (let j = i + 1; j < players.length; j++) {
-      const pi = players[i];
-      const pj = players[j];
-      if (pi.score === pj.score) continue;
-      const scoreDiff = Math.abs(pi.score - pj.score);
-      const amount = scoreDiff * settings.scoreMultiplier;
-      const iWins = settings.mode === 'pot' ? pi.score > pj.score : pi.score < pj.score;
-      pairs.push({
-        nameA: pi.name,
-        nameB: pj.name,
-        scoreA: pi.score,
-        scoreB: pj.score,
-        diff: scoreDiff,
-        winner: iWins ? pi.name : pj.name,
-        loser: iWins ? pj.name : pi.name,
-        amount,
-      });
+  if (settings.mode === 'pearl') {
+    const players = result.players;
+    for (let i = 0; i < players.length; i++) {
+      for (let j = i + 1; j < players.length; j++) {
+        const pi = players[i];
+        const pj = players[j];
+        if (pi.score === pj.score) continue;
+        const scoreDiff = Math.abs(pi.score - pj.score);
+        const amount = scoreDiff * settings.scoreMultiplier;
+        // Pearl: lower score wins
+        const iWins = pi.score < pj.score;
+        pairs.push({
+          nameA: pi.name,
+          nameB: pj.name,
+          scoreA: pi.score,
+          scoreB: pj.score,
+          diff: scoreDiff,
+          winner: iWins ? pi.name : pj.name,
+          loser: iWins ? pj.name : pi.name,
+          amount,
+        });
+      }
     }
   }
 
@@ -218,40 +221,63 @@ export function SettlementResults({ settings, result, onBack }: SettlementResult
               </div>
             </div>
 
-            {/* Step 2: Score gain/loss — pairwise comparison */}
+            {/* Step 2: Score gain/loss */}
             <div>
               <div className="font-semibold text-slate-800 mb-2 border-b pb-1">
-                {zh ? '第二步：分數兩兩比較' : 'Step 2: Score Pairwise Comparison'}
+                {zh
+                  ? (settings.mode === 'pot' ? '第二步：分數損益（直接乘倍）' : '第二步：分數兩兩比較')
+                  : (settings.mode === 'pot' ? 'Step 2: Score P&L (direct multiply)' : 'Step 2: Score Pairwise Comparison')}
               </div>
               <div className="space-y-1 text-xs leading-relaxed">
-                <div className="text-slate-500 text-[10px] italic mb-1">
-                  {zh
-                    ? `${settings.mode === 'pot' ? '高分贏' : '低分贏'} · 分數倍數 ×${settings.scoreMultiplier}`
-                    : `${settings.mode === 'pot' ? 'Higher score wins' : 'Lower score wins'} · multiplier ×${settings.scoreMultiplier}`}
-                </div>
-                {pairs.length === 0 ? (
-                  <div className="text-slate-400">{zh ? '所有玩家分數相同，無分數損益' : 'All players tied — no score P&L'}</div>
+                {settings.mode === 'pot' ? (
+                  // Pot 波: direct score × multiplier
+                  <>
+                    <div className="text-slate-500 text-[10px] italic mb-1">
+                      {zh
+                        ? `分數已是相對分（總和為 0），直接 × 分數倍數 ${settings.scoreMultiplier}`
+                        : `Scores are relative (sum=0), directly × multiplier ${settings.scoreMultiplier}`}
+                    </div>
+                    {result.players.map(p => (
+                      <div key={p.id} className="text-slate-600">
+                        {p.name}: {p.score} × {settings.scoreMultiplier} = <span className={`font-medium ${p.scoreGainLoss >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                          {p.scoreGainLoss >= 0 ? '+' : ''}${p.scoreGainLoss.toFixed(2)}
+                        </span>
+                      </div>
+                    ))}
+                  </>
                 ) : (
-                  pairs.map((pair, idx) => (
-                    <div key={idx} className="text-slate-600">
-                      {pair.nameA} vs {pair.nameB}: |{pair.scoreA} − {pair.scoreB}| = {pair.diff} × {settings.scoreMultiplier} = <span className="font-medium">${pair.amount.toFixed(2)}</span>
-                      {' → '}
-                      <span className="text-emerald-600 font-medium">{pair.winner}</span>
-                      {zh ? ' 贏 ' : ' wins '}
-                      <span className="text-rose-600 font-medium">{pair.loser}</span>
+                  // 啤珠: pairwise comparison
+                  <>
+                    <div className="text-slate-500 text-[10px] italic mb-1">
+                      {zh
+                        ? `啤珠低分贏 · 分數倍數 ×${settings.scoreMultiplier}`
+                        : `Pearl: lower score wins · multiplier ×${settings.scoreMultiplier}`}
                     </div>
-                  ))
+                    {pairs.length === 0 ? (
+                      <div className="text-slate-400">{zh ? '所有玩家分數相同，無分數損益' : 'All players tied — no score P&L'}</div>
+                    ) : (
+                      pairs.map((pair, idx) => (
+                        <div key={idx} className="text-slate-600">
+                          {pair.nameA} vs {pair.nameB}: |{pair.scoreA} − {pair.scoreB}| = {pair.diff} × {settings.scoreMultiplier} = <span className="font-medium">${pair.amount.toFixed(2)}</span>
+                          {' → '}
+                          <span className="text-emerald-600 font-medium">{pair.winner}</span>
+                          {zh ? ' 贏 ' : ' wins '}
+                          <span className="text-rose-600 font-medium">{pair.loser}</span>
+                        </div>
+                      ))
+                    )}
+                    <div className="mt-2 pt-1 border-t border-slate-100 space-y-0.5">
+                      <div className="text-slate-500 text-[10px] mb-1">{zh ? '各玩家分數損益合計：' : 'Net score P&L per player:'}</div>
+                      {result.players.map(p => (
+                        <div key={p.id} className="text-slate-600">
+                          {p.name}: <span className={`font-medium ${p.scoreGainLoss >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                            {p.scoreGainLoss >= 0 ? '+' : ''}${p.scoreGainLoss.toFixed(2)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
                 )}
-                <div className="mt-2 pt-1 border-t border-slate-100 space-y-0.5">
-                  <div className="text-slate-500 text-[10px] mb-1">{zh ? '各玩家分數損益合計：' : 'Net score P&L per player:'}</div>
-                  {result.players.map(p => (
-                    <div key={p.id} className="text-slate-600">
-                      {p.name}: <span className={`font-medium ${p.scoreGainLoss >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        {p.scoreGainLoss >= 0 ? '+' : ''}${p.scoreGainLoss.toFixed(2)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
               </div>
             </div>
 

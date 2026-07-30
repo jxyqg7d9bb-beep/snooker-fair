@@ -93,20 +93,22 @@ export function calculateWaterCosts(
 }
 
 /**
- * Calculate score-based gains/losses using pairwise comparison.
+ * Calculate score-based gains/losses.
  *
  * Pot 波 (high score wins):
- *   For each pair (i, j): winner = higher score.
- *   Winner gains (scoreDiff × multiplier), loser loses the same amount.
+ *   Scores already sum to zero (relative scores).
+ *   Each player's gain/loss = score × multiplier directly.
+ *   Example: A=-320, B=283, C=37 (sum=0)
+ *   A=-320×3=-960, B=283×3=+849, C=37×3=+111
  *
  * 啤珠 (low score wins):
- *   Same pairwise logic but winner = lower score.
- *
- * Example (Pot, multiplier=5, A=1, B=3, C=6):
- *   A vs B: B wins 2 pts → B +10, A -10
- *   A vs C: C wins 5 pts → C +25, A -25
- *   B vs C: C wins 3 pts → C +15, B -15
- *   A=-35, B=-5, C=+40
+ *   Scores do NOT sum to zero (absolute counts e.g. balls potted).
+ *   Use pairwise comparison: lower score wins each pair.
+ *   Example (multiplier=5, A=1, B=3, C=6):
+ *     A vs B: A wins 2 pts → A +10, B -10
+ *     A vs C: A wins 5 pts → A +25, C -25
+ *     B vs C: B wins 3 pts → B +15, C -15
+ *     A=+35, B=+5, C=-40
  */
 export function calculateScoreGainLoss(
   players: Player[],
@@ -115,33 +117,27 @@ export function calculateScoreGainLoss(
   const scoreGainLoss: Record<string, number> = {};
   players.forEach((p) => { scoreGainLoss[p.id] = 0; });
 
-  // Pairwise comparison: every unique pair
-  for (let i = 0; i < players.length; i++) {
-    for (let j = i + 1; j < players.length; j++) {
-      const pi = players[i];
-      const pj = players[j];
-      const diff = Math.abs(pi.score - pj.score) * settings.scoreMultiplier;
-
-      let iWins: boolean;
-      if (settings.mode === 'pot') {
-        // Pot 波: higher score wins
-        iWins = pi.score > pj.score;
-      } else {
-        // 啤珠: lower score wins
-        iWins = pi.score < pj.score;
-      }
-
-      if (pi.score === pj.score) {
-        // Tie: no money changes hands
-        continue;
-      }
-
-      if (iWins) {
-        scoreGainLoss[pi.id] += diff;
-        scoreGainLoss[pj.id] -= diff;
-      } else {
-        scoreGainLoss[pj.id] += diff;
-        scoreGainLoss[pi.id] -= diff;
+  if (settings.mode === 'pot') {
+    // Pot 波: scores sum to zero, direct multiplication
+    players.forEach((p) => {
+      scoreGainLoss[p.id] = p.score * settings.scoreMultiplier;
+    });
+  } else {
+    // 啤珠: pairwise comparison, lower score wins
+    for (let i = 0; i < players.length; i++) {
+      for (let j = i + 1; j < players.length; j++) {
+        const pi = players[i];
+        const pj = players[j];
+        if (pi.score === pj.score) continue; // Tie: no money changes hands
+        const diff = Math.abs(pi.score - pj.score) * settings.scoreMultiplier;
+        // Lower score wins in 啤珠
+        if (pi.score < pj.score) {
+          scoreGainLoss[pi.id] += diff;
+          scoreGainLoss[pj.id] -= diff;
+        } else {
+          scoreGainLoss[pj.id] += diff;
+          scoreGainLoss[pi.id] -= diff;
+        }
       }
     }
   }

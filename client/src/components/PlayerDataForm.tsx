@@ -56,6 +56,18 @@ export function PlayerDataForm({ settings, onSubmit, onBack, initialPlayers }: P
       }
     });
 
+    // Pot 波: scores must sum to zero (they are relative scores)
+    if (settings.mode === 'pot') {
+      const scoreSum = players.reduce((sum, p) => sum + p.score, 0);
+      if (Math.abs(scoreSum) > 0.01) {
+        newErrors.push(
+          language === 'zh'
+            ? `Pot 波分數總和必須為 0（現在是 ${scoreSum > 0 ? '+' : ''}${scoreSum}），請調整分數後重試`
+            : `Pot mode scores must sum to 0 (currently ${scoreSum > 0 ? '+' : ''}${scoreSum}). Please adjust scores.`
+        );
+      }
+    }
+
     if (newErrors.length > 0) {
       setErrors(newErrors);
       return;
