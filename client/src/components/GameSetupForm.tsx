@@ -1,6 +1,13 @@
 /**
  * GameSetupForm Component
  * Handles initial game configuration: mode, multipliers, player count, and pot
+ *
+ * Field order:
+ *   1. Game Mode
+ *   2. Player Count
+ *   3. Score Multiplier
+ *   4. Pot (波鐘) — with optional "split evenly" toggle
+ *   5. Water Multiplier — disabled when pot is split evenly
  */
 
 import { Button } from '@/components/ui/button';
@@ -15,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { GameMode, GameSettings } from '@/lib/settlement';
 import { t } from '@/lib/i18n';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -28,37 +36,32 @@ interface GameSetupFormProps {
 
 export function GameSetupForm({ onSubmit, initialSettings }: GameSetupFormProps) {
   const { language } = useLanguage();
+  const zh = language === 'zh';
+
   const [mode, setMode] = useState<GameMode>(initialSettings?.mode || 'pot');
-  const [scoreMultiplier, setScoreMultiplier] = useState(initialSettings?.scoreMultiplier || 0);
-  const [waterMultiplier, setWaterMultiplier] = useState(initialSettings?.waterMultiplier || 0);
   const [playerCount, setPlayerCount] = useState(
     initialSettings?.playerCount.toString() || (initialSettings?.mode === 'pearl' ? '2' : '3')
   );
+  const [scoreMultiplier, setScoreMultiplier] = useState(initialSettings?.scoreMultiplier || 0);
+  const [pot, setPot] = useState(initialSettings?.pot || 0);
+  const [splitPot, setSplitPot] = useState(false); // 波鐘平分 toggle
+  const [waterMultiplier, setWaterMultiplier] = useState(initialSettings?.waterMultiplier || 0);
+  const [errors, setErrors] = useState<string[]>([]);
 
   // Determine min and max player count based on game mode
   const getPlayerCountRange = () => {
-    if (mode === 'pot') {
-      return { min: 3, max: 6 };
-    } else {
-      return { min: 2, max: 6 };
-    }
+    if (mode === 'pot') return { min: 3, max: 6 };
+    return { min: 2, max: 6 };
   };
-
   const playerRange = getPlayerCountRange();
 
-  // Reset player count if it's out of range when mode changes
   const handleModeChange = (newMode: GameMode) => {
     setMode(newMode);
     const newRange = newMode === 'pot' ? { min: 3, max: 6 } : { min: 2, max: 6 };
     const currentCount = parseInt(playerCount);
-    if (currentCount < newRange.min) {
-      setPlayerCount(newRange.min.toString());
-    } else if (currentCount > newRange.max) {
-      setPlayerCount(newRange.max.toString());
-    }
+    if (currentCount < newRange.min) setPlayerCount(newRange.min.toString());
+    else if (currentCount > newRange.max) setPlayerCount(newRange.max.toString());
   };
-  const [pot, setPot] = useState(initialSettings?.pot || 0);
-  const [errors, setErrors] = useState<string[]>([]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,14 +69,13 @@ export function GameSetupForm({ onSubmit, initialSettings }: GameSetupFormProps)
     const playerCountNum = parseInt(playerCount);
 
     const minPlayers = mode === 'pot' ? 3 : 2;
-    const maxPlayers = 6;
-    if (playerCountNum < minPlayers || playerCountNum > maxPlayers) {
-      newErrors.push(t('playerCountError', language, { min: minPlayers, max: maxPlayers }));
+    if (playerCountNum < minPlayers || playerCountNum > 6) {
+      newErrors.push(t('playerCountError', language, { min: minPlayers, max: 6 }));
     }
     if (scoreMultiplier <= 0) {
       newErrors.push(t('scoreMultiplierError', language));
     }
-    if (waterMultiplier <= 0) {
+    if (!splitPot && waterMultiplier <= 0) {
       newErrors.push(t('penaltyMultiplierError', language));
     }
     if (pot <= 0) {
@@ -86,14 +88,22 @@ export function GameSetupForm({ onSubmit, initialSettings }: GameSetupFormProps)
     }
 
     setErrors([]);
+
+    // When split evenly: waterMultiplier = pot / playerCount (each person's share)
+    // We set waterMultiplier to 0 and handle it in settlement logic via perPlayerShare
     onSubmit({
       mode,
       playerCount: playerCountNum,
       scoreMultiplier,
-      waterMultiplier,
+      waterMultiplier: splitPot ? 0 : waterMultiplier,
       pot,
-    });
+      splitPot,
+    } as GameSettings & { splitPot?: boolean });
   };
+
+  const perPersonAmount = splitPot && pot > 0 && parseInt(playerCount) > 0
+    ? (pot / parseInt(playerCount)).toFixed(2)
+    : null;
 
   return (
     <Card className="w-full animate-slide-up">
@@ -103,7 +113,8 @@ export function GameSetupForm({ onSubmit, initialSettings }: GameSetupFormProps)
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Game Mode Selection */}
+
+          {/* 1. Game Mode */}
           <div className="space-y-3">
             <Label className="text-base font-semibold">{t('gameMode', language)}</Label>
             <RadioGroup value={mode} onValueChange={(value) => handleModeChange(value as GameMode)}>
@@ -111,7 +122,7 @@ export function GameSetupForm({ onSubmit, initialSettings }: GameSetupFormProps)
                 <RadioGroupItem value="pot" id="mode-pot" />
                 <Label htmlFor="mode-pot" className="flex-1 cursor-pointer min-w-0">
                   <div className="font-semibold text-slate-900">
-                    {language === 'zh' ? 'Pot 波' : 'Three-player competition'}{' '}
+                    {zh ? 'Pot 波' : 'Three-player competition'}{' '}
                     <span>🙋🏼‍♂️🆚🙋🏼‍♂️🆚🙋🏼‍♂️</span>
                   </div>
                   <div className="text-sm text-slate-600">{t('potModeDesc', language)}</div>
@@ -120,14 +131,39 @@ export function GameSetupForm({ onSubmit, initialSettings }: GameSetupFormProps)
               <div className="flex items-center space-x-2 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors">
                 <RadioGroupItem value="pearl" id="mode-pearl" />
                 <Label htmlFor="mode-pearl" className="flex-1 cursor-pointer">
-                  <div className="font-semibold text-slate-900">{language === 'zh' ? '啤珠 🃏🎱' : 'Poker Pool 🃏🎱'}</div>
+                  <div className="font-semibold text-slate-900">{zh ? '啤珠 🃏🎱' : 'Poker Pool 🃏🎱'}</div>
                   <div className="text-sm text-slate-600">{t('pearlModeDesc', language)}</div>
                 </Label>
               </div>
             </RadioGroup>
           </div>
 
-          {/* Score Multiplier */}
+          {/* 2. Player Count */}
+          <div className="space-y-2">
+            <Label htmlFor="playerCount" className="text-base font-semibold">
+              {t('playerCount', language)}
+            </Label>
+            <Select value={playerCount} onValueChange={setPlayerCount}>
+              <SelectTrigger id="playerCount">
+                <SelectValue placeholder={t('selectPlayerCount', language)} />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from(
+                  { length: playerRange.max - playerRange.min + 1 },
+                  (_, i) => playerRange.min + i
+                ).map((num) => (
+                  <SelectItem key={num} value={num.toString()}>
+                    {num} {zh ? '人' : 'player'}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-slate-500">
+              {t('playerCountRange', language, { min: playerRange.min, max: playerRange.max })}
+            </p>
+          </div>
+
+          {/* 3. Score Multiplier */}
           <div className="space-y-2">
             <Label htmlFor="scoreMultiplier" className="text-base font-semibold">
               {t('scoreMultiplier', language)}
@@ -145,49 +181,24 @@ export function GameSetupForm({ onSubmit, initialSettings }: GameSetupFormProps)
             <p className="text-xs text-slate-500">{t('scoreMultiplierHint', language)}</p>
           </div>
 
-          {/* Penalty Multiplier */}
+          {/* 4. Pot (波鐘) with split toggle */}
           <div className="space-y-2">
-            <Label htmlFor="waterMultiplier" className="text-base font-semibold">
-              {t('penaltyMultiplier', language)}
-            </Label>
-            <Input
-              id="waterMultiplier"
-              type="number"
-              min="0.1"
-              step="0.1"
-              placeholder="0"
-              value={waterMultiplier || ''}
-              onChange={(e) => setWaterMultiplier(parseFloat(e.target.value) || 0)}
-              className="w-full"
-            />
-            <p className="text-xs text-slate-500">{t('penaltyMultiplierHint', language)}</p>
-          </div>
-
-          {/* Player Count Dropdown */}
-          <div className="space-y-2">
-            <Label htmlFor="playerCount" className="text-base font-semibold">
-              {t('playerCount', language)}
-            </Label>
-            <Select value={playerCount} onValueChange={setPlayerCount}>
-              <SelectTrigger id="playerCount">
-                <SelectValue placeholder={t('selectPlayerCount', language)} />
-              </SelectTrigger>
-              <SelectContent>
-                {Array.from({ length: playerRange.max - playerRange.min + 1 }, (_, i) => playerRange.min + i).map((num) => (
-                  <SelectItem key={num} value={num.toString()}>
-                    {num} {language === 'zh' ? '人' : 'player'}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-slate-500">{t('playerCountRange', language, { min: playerRange.min, max: playerRange.max })}</p>
-          </div>
-
-          {/* Table Rate - Moved to end */}
-          <div className="space-y-2">
-            <Label htmlFor="pot" className="text-base font-semibold">
-              {language === 'zh' ? '波鐘' : 'Table Rate'}
-            </Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="pot" className="text-base font-semibold">
+                {zh ? '波鐘' : 'Table Rate'}
+              </Label>
+              {/* Split evenly toggle */}
+              <div className="flex items-center gap-2">
+                <span className={`text-sm ${splitPot ? 'text-slate-900 font-medium' : 'text-slate-400'}`}>
+                  {zh ? '平分' : 'Split evenly'}
+                </span>
+                <Switch
+                  id="splitPot"
+                  checked={splitPot}
+                  onCheckedChange={setSplitPot}
+                />
+              </div>
+            </div>
             <Input
               id="pot"
               type="number"
@@ -198,7 +209,40 @@ export function GameSetupForm({ onSubmit, initialSettings }: GameSetupFormProps)
               onChange={(e) => setPot(parseFloat(e.target.value) || 0)}
               className="w-full"
             />
-            <p className="text-xs text-slate-500">{t('tableRateHint', language)}</p>
+            {splitPot && perPersonAmount ? (
+              <p className="text-xs text-emerald-600 font-medium">
+                {zh
+                  ? `每人平分 $${perPersonAmount}（波鐘 $${pot} ÷ ${playerCount} 人）`
+                  : `Each player pays $${perPersonAmount} ($${pot} ÷ ${playerCount} players)`}
+              </p>
+            ) : (
+              <p className="text-xs text-slate-500">{t('tableRateHint', language)}</p>
+            )}
+          </div>
+
+          {/* 5. Water Multiplier — disabled when split evenly */}
+          <div className={`space-y-2 transition-opacity duration-200 ${splitPot ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
+            <Label htmlFor="waterMultiplier" className="text-base font-semibold">
+              {t('penaltyMultiplier', language)}
+              {splitPot && (
+                <span className="ml-2 text-xs font-normal text-slate-400">
+                  {zh ? '（已停用 — 波鐘平分）' : '(disabled — pot split evenly)'}
+                </span>
+              )}
+            </Label>
+            <Input
+              id="waterMultiplier"
+              type="number"
+              min="0.1"
+              step="0.1"
+              placeholder="0"
+              value={waterMultiplier || ''}
+              onChange={(e) => setWaterMultiplier(parseFloat(e.target.value) || 0)}
+              className="w-full"
+              disabled={splitPot}
+              tabIndex={splitPot ? -1 : 0}
+            />
+            <p className="text-xs text-slate-500">{t('penaltyMultiplierHint', language)}</p>
           </div>
 
           {/* Error Messages */}
@@ -213,7 +257,7 @@ export function GameSetupForm({ onSubmit, initialSettings }: GameSetupFormProps)
             </div>
           )}
 
-          {/* Submit Button */}
+          {/* Submit */}
           <Button
             type="submit"
             className="w-full h-11 text-base font-semibold bg-slate-900 hover:bg-slate-800 transition-colors"

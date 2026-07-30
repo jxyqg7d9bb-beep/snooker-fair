@@ -18,6 +18,7 @@ export interface GameSettings {
   scoreMultiplier: number;
   waterMultiplier: number;
   pot: number; // 波鐘 - total pot amount
+  splitPot?: boolean; // 波鐘平分 — each player pays pot/playerCount, water multiplier ignored
 }
 
 export interface SettlementResult {
@@ -58,6 +59,23 @@ export function calculateWaterCosts(
   perPlayerShare: number;
 } {
   const totalWater = players.reduce((sum, p) => sum + p.water, 0);
+
+  if (settings.splitPot) {
+    // 波鐘平分模式: each player pays pot / playerCount, water multiplier is ignored
+    const perPlayerShare = settings.pot / players.length;
+    const waterCosts: Record<string, number> = {};
+    players.forEach((player) => {
+      waterCosts[player.id] = perPlayerShare;
+    });
+    return {
+      waterCosts,
+      totalWater,
+      remainingPot: 0,
+      perPlayerShare,
+    };
+  }
+
+  // Normal mode: deduct water fees from pot, split remainder evenly
   const remainingPot = settings.pot - totalWater * settings.waterMultiplier;
   const perPlayerShare = remainingPot / players.length;
 
