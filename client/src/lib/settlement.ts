@@ -93,33 +93,58 @@ export function calculateWaterCosts(
 }
 
 /**
- * Calculate score-based gains/losses
- * For Pot 波: higher score wins (positive gain)
- * For 啤珠: lower score wins (positive gain)
- * 
- * New logic: Score gain/loss = player's score × scoreMultiplier
- * (Not pairwise comparison, but absolute score value)
+ * Calculate score-based gains/losses using pairwise comparison.
+ *
+ * Pot 波 (high score wins):
+ *   For each pair (i, j): winner = higher score.
+ *   Winner gains (scoreDiff × multiplier), loser loses the same amount.
+ *
+ * 啤珠 (low score wins):
+ *   Same pairwise logic but winner = lower score.
+ *
+ * Example (Pot, multiplier=5, A=1, B=3, C=6):
+ *   A vs B: B wins 2 pts → B +10, A -10
+ *   A vs C: C wins 5 pts → C +25, A -25
+ *   B vs C: C wins 3 pts → C +15, B -15
+ *   A=-35, B=-5, C=+40
  */
 export function calculateScoreGainLoss(
   players: Player[],
   settings: GameSettings
 ): Record<string, number> {
   const scoreGainLoss: Record<string, number> = {};
+  players.forEach((p) => { scoreGainLoss[p.id] = 0; });
 
-  // Calculate average score
-  const averageScore = players.reduce((sum, p) => sum + p.score, 0) / players.length;
+  // Pairwise comparison: every unique pair
+  for (let i = 0; i < players.length; i++) {
+    for (let j = i + 1; j < players.length; j++) {
+      const pi = players[i];
+      const pj = players[j];
+      const diff = Math.abs(pi.score - pj.score) * settings.scoreMultiplier;
 
-  // Calculate each player's score gain/loss based on difference from average
-  players.forEach((player) => {
-    let scoreDiff = player.score - averageScore;
+      let iWins: boolean;
+      if (settings.mode === 'pot') {
+        // Pot 波: higher score wins
+        iWins = pi.score > pj.score;
+      } else {
+        // 啤珠: lower score wins
+        iWins = pi.score < pj.score;
+      }
 
-    // For 啤珠 (pearl), lower score wins, so reverse the logic
-    if (settings.mode === 'pearl') {
-      scoreDiff = -scoreDiff;
+      if (pi.score === pj.score) {
+        // Tie: no money changes hands
+        continue;
+      }
+
+      if (iWins) {
+        scoreGainLoss[pi.id] += diff;
+        scoreGainLoss[pj.id] -= diff;
+      } else {
+        scoreGainLoss[pj.id] += diff;
+        scoreGainLoss[pi.id] -= diff;
+      }
     }
-
-    scoreGainLoss[player.id] = scoreDiff * settings.scoreMultiplier;
-  });
+  }
 
   return scoreGainLoss;
 }
