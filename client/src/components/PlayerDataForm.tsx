@@ -104,11 +104,11 @@ export function PlayerDataForm({ settings, onSubmit, onBack, initialPlayers }: P
                   className="h-9 bg-white text-sm text-center px-2"
                 />
 
-                {/* Score - use text type to allow negative sign on iOS */}
+                {/* Score - use text keyboard so minus sign is available on all phones */}
                 <Input
                   id={`score-${index}`}
                   type="text"
-                  inputMode="decimal"
+                  inputMode="text"
                   placeholder="0"
                   value={player.score === 0 ? '' : player.score}
                   onChange={(e) => handlePlayerChange(index, 'score', e.target.value)}
